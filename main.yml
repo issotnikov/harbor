@@ -1,0 +1,56 @@
+---
+- hosts: harbor
+  roles:
+    - role: "nickjj.docker"
+      tags: ["docker"]
+  tasks:
+    - name: 'install base packages'
+      apt:
+        name: "{{ packages }}"
+        update_cache: yes
+      vars:
+        packages:
+        - unzip
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+
+    - name: Copy serts
+      ansible.builtin.copy:
+        src: 
+        dest: 
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy serts key
+      ansible.builtin.copy:
+        src: 
+        dest: 
+        owner: root
+        group: root
+        mode: '0644'
+
+
+    - name: Download and extract installer
+      ansible.builtin.unarchive:
+        src: https://github.com/goharbor/harbor/releases/download/v2.7.0/harbor-offline-installer-v2.7.0.tgz
+        dest: /opt/
+        remote_src: yes
+        creates: /opt/harbor 
+
+    - name: Ensure dir exists
+      ansible.builtin.file:
+        path: /opt/data/harbor
+        state: directory
+        mode: '0755'
+
+    - name: Create harbor.yml
+      template:
+        src: files/harbor/harbor.yml
+        dest: /opt/harbor/harbor.yml
+        mode: 0755
+
+    - name: Run installer
+      ansible.builtin.shell: /opt/harbor/install.sh --with-chartmuseum --with-trivy
